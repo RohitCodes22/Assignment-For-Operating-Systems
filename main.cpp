@@ -5,11 +5,12 @@
 #include <chrono> // for sleep
 #include <thread> // for sleep
 
+
 int main(int argc, char* argv[])
 {
     // single thread processor
     // it's either processing something or it's not
-//    bool processorAvailable = true;
+    bool processorAvailable = true;
 
     // vector of processes, processes will appear here when they are created by
     // the ProcessMgmt object (in other words, automatically at the appropriate time)
@@ -57,10 +58,10 @@ int main(int argc, char* argv[])
 
 
     time = 0;
-//    processorAvailable = true;
+    processorAvailable = true;
 
     //keep running the loop until all processes have been added and have run to completion
-    while(processMgmt.moreProcessesComing()  /* TODO add something to keep going as long as there are processes that arent done! */ )
+    while(processMgmt.moreProcessesComing() || !processList.empty())
     {
         //Update our current time step
         ++time;
@@ -71,35 +72,82 @@ int main(int argc, char* argv[])
         //update the status for any active IO requests
         ioModule.ioProcessing(time);
 
-        //If the processor is tied up running a process, then continue running it until it is done or blocks
-        //   note: be sure to check for things that should happen as the process continues to run (io, completion...)
-        //If the processor is free then you can choose the appropriate action to take, the choices (in order of precedence) are:
-        // - admit a new process if one is ready (i.e., take a 'newArrival' process and put them in the 'ready' state)
-        // - address an interrupt if there are any pending (i.e., update the state of a blocked process whose IO operation is complete)
-        // - start processing a ready process if there are any ready
-
-
         //init the stepAction, update below
         stepAction = noAct;
 
-        
-        //TODO add in the code to take an appropriate action for this time step!
-        //you should set the action variable based on what you do this time step. you can just copy and paste the lines below and uncomment them, if you want.
-        //stepAction = continueRun;  //runnning process is still running
-        //stepAction = ioRequest;  //running process issued an io request
-        //stepAction = complete;   //running process is finished
-        //stepAction = admitNewProc;   //admit a new process into 'ready'
-        //stepAction = handleInterrupt;   //handle an interrupt
-        //stepAction = beginRun;   //start running a process
- 
-        
-
         //   <your code here> 
+        // conditional for handling interrupts
+        if (!interrupts.empty())
+        {
+          IOInterrupt interrupt = interrupts.front();
+          interrupts.pop_front();
+          for (auto& process : processList)
+          {
+            if (process.id == interrupt.procID)
+            {
+              process.state = ready;
+              stepAction = handleInterrupt;
+              break;
+            }
+          }
+        }
 
+      // loop for admitting new processes
+      for (auto& process : processList)
+      {
+        if (process.state == newArrival)
+        {
+          process.state = ready;
+          stepAction = admitNewProc;
+          break;
+        }
+      }
 
+      //conditional for running processes
+      if (processorAvailable)
+      {
+        for (auto& process : processList)
+        {
+          if (process.state == ready)
+          {
+            process.state = processing;
+            processorAvailable = false;
+            stepAction = beginRun;
+            break;
+          }
+        }
+      }
+      else 
+      {
+        for (auto& process : processList)
+        {
+          if (process.state == processing)
+          {
+            process.processorTime++;
+            if (!process.ioEvents.empty() && (process.processorTime == process.reqProcessorTime))
+            {
+              ioModule.submitIORequest(time, process.ioEvents.front(), process);
+              process.ioEvents.pop_front();
+              process.state = blocked;
+              processorAvailable = true;
+              stepAction = ioRequest;
+            }
+            else if (process.processorTime == process.reqProcessorTime)
+            {
+              process.state = done;
+              process.doneTime = time;
+              processorAvailable = true;
+              stepAction = complete;
+            }
+            else
+            {
+              stepAction = continueRun;
+            }
 
-
-
+            break;
+          }
+        }
+      }
 
         // Leave the below alone (at least for final submission, we are counting on the output being in expected format)
         cout << setw(5) << time << "\t"; 

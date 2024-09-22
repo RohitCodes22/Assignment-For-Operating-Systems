@@ -1,4 +1,8 @@
+#ifndef PROCESS_MGMT_CPP
+#define PROCESS_MGMT_CPP
+
 #include "processMgmt.h"
+#include <iostream>
 
 void ProcessManagement::readProcessFile(const string& fname)
 {
@@ -58,3 +62,5 @@ void ProcessManagement::activateProcesses(const int& time)
         }
     }
 }
+
+#endif

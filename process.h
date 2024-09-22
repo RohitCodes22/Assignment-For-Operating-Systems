@@ -10,7 +10,8 @@ that when the process hits it's 10th time step (i.e., Process::processorTime = 1
 it should enter a blocked state for IOEvent::duration time steps.
 
 */
-
+#ifndef PROCESS_H
+#define PROCESS_H
 #pragma once
 
 #include<iostream>
@@ -73,3 +74,4 @@ void printProcessStates(list<Process>& processVector);
 // Print all information about all processes from a vector (debugging function)
 void printProcessSet(vector<Process>& processVector);
 
+#endif

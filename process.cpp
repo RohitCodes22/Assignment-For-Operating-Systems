@@ -1,4 +1,8 @@
+#ifndef PROCESS_CPP
+#define PROCESS_CPP
+
 #include "process.h"
+#include <iostream>
 
 void printProcessStates(list<Process>& processVector)
 {
@@ -36,3 +40,5 @@ void printProcessSet(vector<Process>& processVector)
         Proc.printProcess();
     }
 }
+
+#endif
