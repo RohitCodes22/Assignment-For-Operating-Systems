@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
           if (process.state == processing)
           {
             process.processorTime++;
-            if (!process.ioEvents.empty() && (process.processorTime == process.reqProcessorTime))
+            if (!process.ioEvents.empty() && (process.processorTime >= process.reqProcessorTime))
             {
               ioModule.submitIORequest(time, process.ioEvents.front(), process);
               process.ioEvents.pop_front();
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
               processorAvailable = true;
               stepAction = ioRequest;
             }
-            else if (process.processorTime == process.reqProcessorTime)
+            else if (process.processorTime >= process.reqProcessorTime)
             {
               process.state = done;
               process.doneTime = time;
@@ -179,7 +179,7 @@ int main(int argc, char* argv[])
 
         // You may wish to use a second vector of processes (you don't need to, but you can)
         printProcessStates(processList); // change processList to another vector of processes if desired
-
+        
         this_thread::sleep_for(chrono::milliseconds(sleepDuration));
     }
 
